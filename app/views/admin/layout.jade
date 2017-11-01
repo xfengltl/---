@@ -1,0 +1,58 @@
+extends ../layout 
+//-  
+append css
+	link(href='/css/admin.css',rel='stylesheet')
+	link(href="/components/font-awesome/css/font-awesome.css", rel="stylesheet")
+
+block main
+	//- block content
+	nav.navbar.navbar-inverse.navbar-fixed-top
+		.container-fluid
+			.navbar-header
+				button.navbar-toggle.collapsed(data-target='#navbar', data-toggle='collapse', type='button', aria-controls='navbar', aria-expanded='false')
+					span.sr-only Toggle navigation
+					span.icon-bar
+					span.icon-bar
+					span.icon-bar
+				a.navbar-brand(href='/') 在学习’s Blog
+			#navbar.navbar-collapse.collapse
+				ul.nav.navbar-nav.navbar-right
+					li
+						a(href='/admin/users/logout') 
+							i.fa.fa-unlock-alt
+							| &nbsp;注销
+					li
+						a(href='#') 
+							i.fa.fa-question
+							| &nbsp;帮助
+
+	.container-fluid
+		.row
+			.col-sm-3.col-md-2.sidebar
+				ul.nav.nav-sidebar
+					li.active
+						a(href='/admin/posts/list')
+							i.fa.fa-files-o
+							| &nbsp;文章列表 
+							span.sr-only (current)
+					li
+						a(href='/admin/posts/add') 
+							i.fa.fa-file-o
+							| &nbsp;添加文章
+					li
+						a(href='/admin/categories/list') 
+							i.fa.fa-th-list
+							| &nbsp;分类列表
+					li
+						a(href='/admin/categories/add') 
+							i.fa.fa-plus
+							| &nbsp;添加分类
+				ul.nav.nav-sidebar
+					li
+						a(href='/admin/users/password') 
+							i.fa.fa-lock
+							| &nbsp;修改密码
+						
+			.col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main
+				!= messages()
+				block content
