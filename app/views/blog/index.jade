@@ -9,16 +9,16 @@ block content
       h3.post-title
         //- a(href="/posts/view/" + post._id, target="_blank")
         a(href="/posts/view/" + post.slug, target="_blank")
-          =post.title
+          = post.title
       div.post-abstract
-        =truncate(post.content,160)
+        != truncate(post.content,160)
       div.post-meta
         span.post-created
           时间:&nbsp;
-          =moment(post.created).format('YYYY-MM-DD HH:SS')
+          = moment(post.created).format('YYYY-MM-DD HH:SS')
         span.post-author
           作者:&nbsp;
-          =post.author.name
+          = post.author.name
         span.post-category
           分类:&nbsp;
           a(href="/posts/category/" + post.category.name, target="_blank")

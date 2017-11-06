@@ -1,6 +1,5 @@
 const express = require('express');
 const glob = require('glob');
-
 const favicon = require('serve-favicon');
 const logger = require('morgan');
 const moment = require('moment');
@@ -10,15 +9,17 @@ const bodyParser = require('body-parser');
 const compress = require('compression');
 const methodOverride = require('method-override');
 const mongoose = require('mongoose');
-
+// const MongoStore = require('connect-mongo')(session);
+var passport = require('passport');
 var session = require('express-session');
+var validator = require('express-validator');
 var flash = require('connect-flash');
 var messages = require('express-messages');
-// var MongoStore = require('connect-mongo')(session);
+var MongoStore = require('connect-mongo')(session);
 
 var Category = mongoose.model('Category');
-
-module.exports = (app, config) => {
+var User = mongoose.model('User');
+module.exports = (app, config, connection) => {
 	const env = process.env.NODE_ENV || 'development';
 	app.locals.ENV = env;
 	app.locals.ENV_DEVELOPMENT = env == 'development';
@@ -31,6 +32,7 @@ module.exports = (app, config) => {
 		app.locals.moment = moment;
 		app.locals.truncate = truncate;
 
+		// 进行数据的排序查找
 		Category.find({}).sort('-created').exec(function (err, categories) {
 			if (err) {
 				return next(err);
@@ -53,6 +55,26 @@ module.exports = (app, config) => {
 	app.use(bodyParser.urlencoded({
 		extended: true
 	}));
+
+
+    app.use(validator({
+        errorFormatter: function(param, msg, value) {
+            var namespace = param.split('.'),
+                root = namespace.shift(),
+                formParam = root;
+
+            while(namespace.length) {
+                formParam += '[' + namespace.shift() + ']';
+            }
+            
+            return {
+                param : formParam,
+                msg   : msg,
+                value : value
+            };
+        }
+    }));
+
 	app.use(cookieParser());
 
 	app.use(session({
@@ -62,13 +84,33 @@ module.exports = (app, config) => {
 		cookie: {
 			secure: false
 		},
-		// store: new MongoStore({ mongooseConnection: connection })
+		store: new MongoStore({ mongooseConnection: connection })
 	}));
+	app.use(passport.initialize());
+	app.use(passport.session());
+
+
+	app.use((req, res, next) => {
+		req.user = null;
+		if(req.session.passport && req.session.passport.user){
+			User.findById(req.session.passport.user, (err, user) => {
+				if (err) return next(err);
+				user.passport = null;
+				req.user = user;
+
+				next();
+			});
+		} else {
+			next();
+		}
+	});
+
+
 	app.use(flash());
 	app.use(function (req, res, next) {
 		res.locals.messages = messages(req, res);
-		// app.locals.user = req.user;
-		// console.log(req.session, app.locals.user);
+		app.locals.user = req.user;
+		console.log(req.session, app.locals.user);
 		next();
 	});
 	app.use(compress());
@@ -110,3 +152,5 @@ module.exports = (app, config) => {
 
 	return app;
 };
+
+

@@ -9,28 +9,40 @@ module.exports = (app) => {
 };
 
 router.get('/', (req, res, next) => {
-  Post.find().populate('author').populate('category').exec((err, posts) => {
-    // return res.jsonp(posts);
-    if (err) return next(err);
 
-    var pageNum = Math.abs(parseInt(req.query.page || 1, 10));
-    var pageSize = 10;
+  var conditions = { published: true };
 
-    var totalCount = posts.length;
-    var pageCount = Math.ceil(totalCount / pageSize);
+  if (req.query.keyword) {
+      conditions.title = new RegExp(req.query.keyword.trim(), 'i');
+      conditions.content = new RegExp(req.query.keyword.trim(), 'i');
+  }
 
-    if (pageNum > pageCount) {
-      pageNum = pageCount;
-    }
+  Post.find(conditions)
+    .sort('-created')
+    .populate('author')
+    .populate('category')
+    .exec((err, posts) => {
+
+      if (err) return next(err);
+
+      var pageNum = Math.abs(parseInt(req.query.page || 1, 10));
+      var pageSize = 10;
+
+      var totalCount = posts.length;
+      var pageCount = Math.ceil(totalCount / pageSize);
+
+      if (pageNum > pageCount) {
+        pageNum = pageCount;
+      }
 
 
-    res.render('blog/index', {
-      posts: posts.slice((pageNum - 1) * pageSize, pageNum * pageSize),
-      pageNum: pageNum,
-      pageCount: pageCount,
-      pretty: true,
+      res.render('blog/index', {
+        posts: posts.slice((pageNum - 1) * pageSize, pageNum * pageSize),
+        pageNum: pageNum,
+        pageCount: pageCount,
+        pretty: true,
+      });
     });
-  });
 });
 
 /**
@@ -46,9 +58,9 @@ router.get('/category/:name', (req, res, next) => {
     }
 
     Post.find({
-        category: category,
-        published: true
-      })
+      category: category,
+      published: true
+    })
       .sort('created')
       .populate('category')
       .populate('author')
